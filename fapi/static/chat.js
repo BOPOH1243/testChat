@@ -1,19 +1,16 @@
-const chat = document.getElementById("chat");
-const input = document.getElementById("messageInput");
-let ws = new WebSocket("ws://" + window.location.host + "/ws");
+// static/chat.js
 
-// Отображение сообщений в чате
-ws.onmessage = function(event) {
-    let message = document.createElement("div");
-    message.textContent = event.data;
-    chat.appendChild(message);
-    chat.scrollTop = chat.scrollHeight;  // Автопрокрутка вниз
+const token = document.cookie.replace(/(?:(?:^|.*;\s*)token\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+const socket = new WebSocket(`ws://localhost:8000/ws?token=${token}`);
+
+socket.onmessage = function(event) {
+    const message = JSON.parse(event.data);
+    const chat = document.getElementById("chat");
+    chat.innerHTML += `<p><b>${message.username}:</b> ${message.content}</p>`;
 };
 
-// Отправка сообщения при нажатии Enter
-input.addEventListener("keypress", function(event) {
-    if (event.key === "Enter") {
-        ws.send(input.value);
-        input.value = "";  // Очистка поля ввода
-    }
-});
+function sendMessage() {
+    const input = document.getElementById("message");
+    socket.send(input.value);
+    input.value = "";
+}

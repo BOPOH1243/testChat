@@ -1,0 +1,57 @@
+<!-- templates/chat.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+</head>
+
+<body>
+    <h2>Chat Room</h2>
+    <div id="chat-box" style="border: 1px solid #333; padding: 10px; width: 300px; height: 400px; overflow-y: scroll;">
+        <!-- Здесь будут сообщения чата -->
+    </div>
+    <br>
+    <input type="text" id="messageInput" placeholder="Type a message..." autofocus>
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        function getCookie(name) {
+            const fullCookieString = '; ' + document.cookie;
+            const splitCookie = fullCookieString.split('; ' + name + '=');
+            return splitCookie.length === 2 ? splitCookie.pop().split(';').shift() : null;
+        }
+        const username = localStorage.getItem("username");  // Предполагаем, что username хранится в локальном хранилище
+        const ws = new WebSocket(`ws://localhost:8000/ws?auth_token=${getCookie('auth_token')}`);
+
+        ws.onopen = () => {
+            console.log("Connected to chat server");
+        };
+
+        ws.onmessage = (event) => {
+            const chatBox = document.getElementById("chat-box");
+            const messageElement = document.createElement("div");
+            messageElement.textContent = event.data;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;  // Прокрутка вниз
+        };
+
+        ws.onclose = () => {
+            console.log("Disconnected from chat server");
+        };
+
+        function sendMessage() {
+            const messageInput = document.getElementById("messageInput");
+            const message = messageInput.value;
+            if (message) {
+                ws.send(message);
+                messageInput.value = "";
+            }
+        }
+    </script>
+</body>
+
+</html>
