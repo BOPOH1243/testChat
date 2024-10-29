@@ -10,6 +10,8 @@ from models.token import Token
 from pydantic import BaseModel 
 import json
 from typing import Union, Annotated
+from redis_base import redis_connect
+
 
 class Cookies(BaseModel):
     model_config = {"extra": "forbid"}
@@ -25,6 +27,7 @@ async def send_message_history(websocket: WebSocket, session: AsyncSession):
     for message in messages:
         await websocket.send_text(f"{message.username}: {message.content}")
 
+
 async def get_user_from_token(token: str, session: AsyncSession):
     """
     Получает пользователя по токену, если он существует.
@@ -36,8 +39,7 @@ async def get_user_from_token(token: str, session: AsyncSession):
     Возвращает:
         User | None: Объект пользователя, если он найден; иначе None.
     """
-    try:
-        # Получаем объект токена
+    async def get_user_from_db(token):
         result = await session.execute(select(Token.user_id).where(Token.token == token))
         user_id = result.scalars().first()
 
@@ -45,6 +47,18 @@ async def get_user_from_token(token: str, session: AsyncSession):
             # Ищем пользователя по user_id из токена
             result = await session.execute(select(User).where(User.id == user_id))
             user = result.scalars().first()
+            return user
+    try:
+
+        # Получаем объект токена
+        cache_user = redis_connect.get(token)
+        if cache_user:
+            print('взял из кеша')
+            return User.json_deserialize(cache_user)
+        else:
+            print('взял из БД')
+            user = await get_user_from_db(token=token)
+            redis_connect.set(token, user.json_serialize(),ex=1)
             return user
         return None
     except Exception as e:

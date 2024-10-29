@@ -12,7 +12,7 @@ class Token(Base):
     token = Column(String, unique=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     
-    user = relationship("User", back_populates="tokens")
+    user = relationship("User", back_populates="tokens", lazy='joined')
 
     def __init__(self, user_id: int):
         self.token = str(uuid.uuid4())  # Генерация уникального токена
