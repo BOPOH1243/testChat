@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
-# URL для подключения к базе данных SQLite (можно заменить на PostgreSQL)
-DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+# URL для подключения к базе данных PostgreSQL
+DATABASE_URL = "postgresql+asyncpg://myuser:mypassword@db/mydb"
 
 # Создание асинхронного двигателя SQLAlchemy
 engine = create_async_engine(DATABASE_URL, echo=True)

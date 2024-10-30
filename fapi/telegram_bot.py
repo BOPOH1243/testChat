@@ -37,15 +37,15 @@ class TelegramBot:
         """Обработчик любого сообщения"""
         await self.add_user(message.from_user.id)
 
-    async def add_user(self, tg_id: int):
+    async def add_user(self, tg_id:int):
         """Добавление пользователя в базу данных, если его нет"""
         async with async_session() as session:
             async with session.begin():
                 # Проверка, есть ли пользователь в базе данных
-                result = await session.execute(select(TgUser).where(TgUser.tg_id == tg_id))
+                result = await session.execute(select(TgUser).where(TgUser.tg_id == str(tg_id)))
                 user = result.scalars().first()
                 if not user:
-                    new_user = TgUser(tg_id=tg_id)
+                    new_user = TgUser(tg_id=str(tg_id))
                     session.add(new_user)
                     await session.commit()
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Установите переменные окружения для имени пользователя, базы данных и пароля
-POSTGRES_USER=${POSTGRES_USER:-"username"}
-POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-"password"}
-POSTGRES_DB=${POSTGRES_DB:-"dbname"}
+# Установка переменных окружения для имени пользователя, базы данных и пароля
+POSTGRES_USER=${POSTGRES_USER:-"myuser"}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-"mypassword"}
+POSTGRES_DB=${POSTGRES_DB:-"mydb"}
 
 # Установка PostgreSQL
 apt update && apt install -y postgresql postgresql-contrib
@@ -13,12 +13,16 @@ service postgresql start
 
 # Настройка PostgreSQL (создание пользователя и базы данных)
 sudo -u postgres psql <<EOF
+DROP DATABASE IF EXISTS $POSTGRES_DB;
+DROP USER IF EXISTS $POSTGRES_USER;
+
 CREATE USER $POSTGRES_USER WITH PASSWORD '$POSTGRES_PASSWORD';
-CREATE DATABASE $POSTGRES_DB;
-GRANT ALL PRIVILEGES ON DATABASE $POSTGRES_DB TO $POSTGRES_USER;
-ALTER ROLE $POSTGRES_USER SET client_encoding TO 'utf8';
-ALTER ROLE $POSTGRES_USER SET default_transaction_isolation TO 'read committed';
-ALTER ROLE $POSTGRES_USER SET timezone TO 'UTC';
+CREATE DATABASE $POSTGRES_DB OWNER $POSTGRES_USER;
+
+\c $POSTGRES_DB;
+
+GRANT ALL PRIVILEGES ON SCHEMA public TO $POSTGRES_USER;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $POSTGRES_USER;
 EOF
 
 # Настройка PostgreSQL для работы внутри Docker (разрешение внешнего подключения)
